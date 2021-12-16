@@ -1,29 +1,9 @@
-/**
- * Juego del 2048
- * 
- * Consiste en mover las celdas en una direccion arriba, abajo, izquierda o
- * derecha, los numeros se moveran agrupados a la direccion deseada y si son
- * iguales se juntaran en una misma celda, el objetivo del juego es llegar a
- * 2048.
- * 
- * @author InsetJesux
- * @version 1.0
- * 
- */
 public class Board {
 	private int[][] board;
 	private int horizontalLength;
 	private int verticalLength;
 	private BoardState boardState = BoardState.InProgress;
-
-	/**
-	 * Getter de boardState
-	 * 
-	 * @return Devuelve el estado del tablero
-	 */
-	public BoardState getBoardState() {
-		return boardState;
-	}
+	private int score = 0;
 
 	/**
 	 * Constructor de la clase
@@ -39,6 +19,33 @@ public class Board {
 
 		// Iniciar tablero
 		this.createBoard(maxInitialValue);
+	}
+	
+	/***
+	 * Getter de score
+	 * 
+	 * @return Devuelve la puntuacion del tablero
+	 */
+	public int getScore() {
+		return score;
+	}
+	
+	/***
+	 * Getter de board
+	 * 
+	 * @return Devuelve el tablero
+	 */
+	public int[][] getBoard() {
+		return board;
+	}
+	
+	/**
+	 * Getter de boardState
+	 * 
+	 * @return Devuelve el estado del tablero
+	 */
+	public BoardState getBoardState() {
+		return boardState;
 	}
 
 	/**
@@ -79,23 +86,25 @@ public class Board {
 	}
 
 	/**
-	 * Mueve los tiles sumando los que son iguales en la direccion indicada
+	 * Mueve los tiles sumando los que son iguales en la direccion indicada y si hay movimiento genera el numero aleatorio
 	 * 
 	 * @param direction Direccion en la que mover los tiles
 	 */
 	public void moveTiles(Direction direction) {
+		boolean hasMoved = false;
+		
 		switch (direction) {
 		case Up:
-			moveTilesUp();
+			hasMoved = moveTilesUp();
 			break;
 		case Down:
-			moveTilesDown();
+			hasMoved = moveTilesDown();
 			break;
 		case Right:
-			moveTilesRight();
+			hasMoved = moveTilesRight();
 			break;
 		case Left:
-			moveTilesLeft();
+			hasMoved = moveTilesLeft();
 			break;
 		}
 
@@ -117,14 +126,18 @@ public class Board {
 			}
 		}
 
-		if (zeroLeft)
+		if (zeroLeft && hasMoved)
 			generateNewNumber(1);
 	}
 
-	/**
+	/***
 	 * Mueve los tiles a la izquierda y suma los que son iguales
+	 * 
+	 * @return Devuelve true si algun tile se ha movido
 	 */
-	private void moveTilesLeft() {
+	private boolean moveTilesLeft() {
+		boolean hasMoved = false;
+		
 		// Elimina los ceros a la izquierda y entre medio de los tiles
 		for (int i = 0; i < board.length; i++) {
 			int[] filaTemporal = new int[board[i].length];
@@ -133,6 +146,11 @@ public class Board {
 			for (int j = 0; j < board[i].length; j++) {
 				if (board[i][j] != 0)
 					filaTemporal[indice++] = board[i][j];
+			}
+			
+			// Comprobar si el array original y el temporal han cambiado
+			for (int j = 0; j < filaTemporal.length; j++) {
+				if (filaTemporal[j] != board[i][j]) hasMoved = true;
 			}
 
 			System.arraycopy(filaTemporal, 0, board[i], 0, board[i].length);
@@ -145,6 +163,12 @@ public class Board {
 				if (board[i][j] == board[i][j + 1]) {
 					board[i][j] *= 2;
 
+					// Al combinarse dos baldosas hay movimiento
+					if (board[i][j] != 0) hasMoved = true;
+					
+					// Sumamos la puntuacion al jugador
+					score += board[i][j];
+					
 					// Mueve el resto hacia la izquierda, sobreescribiendo el valor que ya se ha
 					// añadido al primero
 					for (int k = j + 1; k < board[i].length - 1; k++) {
@@ -156,12 +180,19 @@ public class Board {
 				}
 			}
 		}
+		
+		return hasMoved;
 	}
 
-	/**
+	
+	/***
 	 * Mueve los tiles a la derecha y suma los que son iguales
+	 * 
+	 * @return Devuelve true si algun tile se ha movido
 	 */
-	private void moveTilesRight() {
+	private boolean moveTilesRight() {
+		boolean hasMoved = false;
+		
 		// Elimina los ceros a la derecha y entre medio de los tiles
 		for (int i = 0; i < board.length; i++) {
 			int[] filaTemporal = new int[board[i].length];
@@ -170,6 +201,11 @@ public class Board {
 			for (int j = board[i].length - 1; j >= 0; j--) {
 				if (board[i][j] != 0)
 					filaTemporal[indice--] = board[i][j];
+			}
+			
+			// Comprobar si el array original y el temporal han cambiado
+			for (int j = 0; j < filaTemporal.length; j++) {
+				if (filaTemporal[j] != board[i][j]) hasMoved = true;
 			}
 
 			System.arraycopy(filaTemporal, 0, board[i], 0, board[i].length);
@@ -182,6 +218,12 @@ public class Board {
 				if (board[i][j] == board[i][j - 1]) {
 					board[i][j] *= 2;
 
+					// Al combinarse dos baldosas hay movimiento
+					if (board[i][j] != 0) hasMoved = true;
+					
+					// Sumamos la puntuacion al jugador
+					score += board[i][j];
+
 					// Mueve el resto hacia la derecha, sobreescribiendo el valor que ya se ha
 					// añadido al primero
 					for (int k = j - 1; k > 0; k--) {
@@ -193,12 +235,18 @@ public class Board {
 				}
 			}
 		}
+		
+		return hasMoved;
 	}
 
-	/**
+	/***
 	 * Mueve los tiles hacia arriba y suma los que son iguales
+	 * 
+	 * @return Devuelve true si algun tile se ha movido
 	 */
-	private void moveTilesUp() {
+	private boolean moveTilesUp() {
+		boolean hasMoved = false;
+		
 		// Elimina los ceros arriba y entre medio de los tiles
 		for (int i = 0; i < horizontalLength; i++) {
 			int[] columnaTemporal = new int[verticalLength];
@@ -207,11 +255,13 @@ public class Board {
 			for (int j = 0; j < verticalLength; j++) {
 				if (board[j][i] != 0) {
 					columnaTemporal[indice++] = board[j][i];
-					board[j][i] = 0;
 				}
 			}
 
 			for (int j = 0; j < columnaTemporal.length; j++) {
+				// Comprobar si el array original y el temporal han cambiado
+				if (columnaTemporal[j] != board[j][i]) hasMoved = true;
+				
 				board[j][i] = columnaTemporal[j];
 			}
 		}
@@ -222,6 +272,12 @@ public class Board {
 			for (int j = 0; j < verticalLength - 1; j++) {
 				if (board[j][i] == board[j + 1][i]) {
 					board[j][i] *= 2;
+
+					// Al combinarse dos baldosas hay movimiento
+					if (board[j][i] != 0) hasMoved = true;
+					
+					// Sumamos la puntuacion al jugador
+					score += board[j][i];
 
 					// Mueve el resto hacia arriba, sobreescribiendo el valor que ya se ha añadido
 					// al primero
@@ -234,12 +290,18 @@ public class Board {
 				}
 			}
 		}
+		
+		return hasMoved;
 	}
 
-	/**
+	/***
 	 * Mueve los tiles hacia abajo y suma los que son iguales
+	 * 
+	 * @return Devuelve true si algun tile se ha movido
 	 */
-	private void moveTilesDown() {
+	private boolean moveTilesDown() {
+		boolean hasMoved = false;
+		
 		// Elimina los ceros abajo y entre medio de los tiles
 		for (int i = 0; i < horizontalLength; i++) {
 			int[] columnaTemporal = new int[verticalLength];
@@ -248,11 +310,13 @@ public class Board {
 			for (int j = verticalLength - 1; j >= 0; j--) {
 				if (board[j][i] != 0) {
 					columnaTemporal[indice--] = board[j][i];
-					board[j][i] = 0;
 				}
 			}
 
 			for (int j = 0; j < columnaTemporal.length; j++) {
+				// Comprobar si el array original y el temporal han cambiado
+				if (columnaTemporal[j] != board[j][i]) hasMoved = true;
+
 				board[j][i] = columnaTemporal[j];
 			}
 		}
@@ -263,6 +327,12 @@ public class Board {
 			for (int j = verticalLength - 1; j > 0; j--) {
 				if (board[j][i] == board[j - 1][i]) {
 					board[j][i] *= 2;
+
+					// Al combinarse dos baldosas hay movimiento
+					if (board[j][i] != 0) hasMoved = true;
+					
+					// Sumamos la puntuacion al jugador
+					score += board[j][i];
 
 					// Mueve el resto hacia la abajo, sobreescribiendo el valor que ya se ha añadido
 					// al primero
@@ -275,6 +345,8 @@ public class Board {
 				}
 			}
 		}
+		
+		return hasMoved;
 	}
 
 	/**
